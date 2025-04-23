@@ -1,0 +1,19 @@
+@startmindmap (struktur data)
+* Tipe data
+** primitif
+*** numerik
+**** interger
+**** float 
+**** double 
+*** string
+**** char 
+**** vachar
+**** teks 
+*** boolean 
+** non-Primitif
+*** kompleks
+**** array 
+**** struct
+*** date dan timer
+*** pointer
+@endmindmap

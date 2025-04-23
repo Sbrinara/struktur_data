@@ -2,7 +2,7 @@
 >Merupakan cara untuk mengatur, menyimpan, dan dimanipulasi secara efisien.
 >>Terdiri dari:
 * Struktur Data Linear
->>>Dimana yang data-datanya tersusun secara berurutan, dimana setiap elemenya melekat pada elemen sebelumnya.
+>>> Dimana yang data-datanya tersusun secara berurutan, dimana setiap elemenya melekat pada elemen sebelumnya.
 - Struktur Data Statis >>>dimana data memiliki ukuran dan memori yang tetap,
 contohnya : Array
 - Struktur Data Dinamis
