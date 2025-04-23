@@ -9,22 +9,22 @@
     >> - Float: Tipe Data Float adalah Tipe data pemrograman yang digunakan untuk menyimpan angka desimal. Contoh: float y = 10.5;
     >> - Double: Sama seperti float, tetapi lebih presisi. Contoh: double z = 10.123456;
 
-> 2. Tipe Data String (Teks)
+>> 2. Tipe Data String (Teks)
     adalah tipe data pemrograman yang dapat menampung karakter dengan jumlah yang banyak yaitu 255 karakter.
     >> - Char: Digunakan untuk menyimpan karakter dengan  ukuran yang tetap. Contoh: char c = 'A';
     >> - Varchar: Digunakan untuk menyimpan karakter dengan ukuran yang dinamis. Contoh (SQL): VARCHAR(50)
     >> - Teks: Digunakan untuk menyimpan data teks. Contoh (SQL): TEXT
 
-> 3. Tipe Data Boolean
+>> 3. Tipe Data Boolean
     adalah sebuah tipe data yang hanya dapat menyimpan nilai true atau false. Contoh: bool isTrue = true;
 
 2. Non-Primitif
-> 4. Tipe Data Kompleks
+>> 4. Tipe Data Kompleks
     >> - Array: Tipe Data array adalah Tipe Data pemrograman yang digunakan untuk menyimpan kumpulan nilai dengan tipe data yang sama dalam satu struktur data. Indeks array adalah angka atau nilai yang digunakan untuk mengakses elemen tertentu dalam sebuah array. Indeks array harus berupa tipe data yang menyatakan bilangan bulat (integer) atau tipe data lain yang dapat direpresentasikan sebagai bilangan bulat. Contoh: int arr[5] = {1, 2, 3, 4, 5};
     >> - Struct: Efisiensi Pengelolaan Memori: Sebuah kumpulan variabel dengan berbagai jenis tipe data yang terintegrasi dalam satu kesatuan. 
 
-> 5. Tipe Data Date dan Timer
+>> 5. Tipe Data Date dan Timer
     Tipe Data Date and Time adalah tipe data yang berfungsi untuk menangani tanggal atau waktu dalam pemrograman. Contoh (Java): Date tanggalHariIni = new Date();
 
-> 6. Tipe Data Pointer
+>> 6. Tipe Data Pointer
     Menyimpan alamat memori dari variabel lain. Contoh: int* ptr = &x;
