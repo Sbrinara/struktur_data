@@ -12,12 +12,12 @@ int main(){
 
     bool e = true;
 
-    string g = "hello world";
+    string f = "hello world";
 
     cout << num << endl;
     cout << b << endl;
     cout << c << endl;
     cout << d << endl;
     cout << e << endl;
-    cout << g << endl;     
+    cout << f << endl;     
 }
