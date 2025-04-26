@@ -4,7 +4,7 @@
 * Struktur Data Linear
 >>Dimana yang data-datanya tersusun secara berurutan, dimana setiap elemenya melekat pada elemen sebelumnya.
 - Struktur Data Statis 
->>Dimana data memiliki ukuran dan memori yang tetap,
+>> Dimana data memiliki ukuran dan memori yang tetap,
 contohnya : Array
 - Struktur Data Dinamis
 >>Ukurannya tidak tetap dan bisa berubah-ubah sesuai kompleksitas memori yang ada.
