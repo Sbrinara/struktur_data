@@ -1,23 +1,26 @@
 #include <iostream>
+
 using namespace std;
 
 int main(){
-    int num = 10
+    int a = 10;
 
     float b = 3.14;
 
     double c = 9.00;
 
-    char d = 'A'
+    char d = 'A';
 
     bool e = true;
 
     string f = "hello world";
 
-    cout << num << endl;
+    cout << a << endl;
     cout << b << endl;
     cout << c << endl;
     cout << d << endl;
     cout << e << endl;
-    cout << f << endl;     
+    cout << f << endl;   
+    
+    return 0;
 }
