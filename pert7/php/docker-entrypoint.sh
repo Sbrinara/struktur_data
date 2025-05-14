@@ -1,152 +1,59 @@
-FROM php:8.3-fpm
+#!/bin/bash
 
-ENV PS1="\u@\h:\w\\$ "
-ENV TZ="Asia/Jakarta"
+# Destination of env file inside container
+ENV_FILE="/var/www/.env"
 
-ENV COMPOSER_MEMORY_LIMIT='-1'
+# Loop through XDEBUG, PHP_IDE_CONFIG and REMOTE_HOST variables and check if they are set.
+# If they are not set then check if we have values for them in the env file, if the env file exists. If we have values
+# in the env file then add exports for these in in the ~./bashrc file.
+for VAR in XDEBUG PHP_IDE_CONFIG REMOTE_HOST
+do
+  if [ -z "${!VAR}" ] && [ -f "${ENV_FILE}" ]; then
+    VALUE=$(grep $VAR $ENV_FILE | cut -d '=' -f 2-)
+    if [ ! -z "${VALUE}" ]; then
+      # Before adding the export we clear the value, if set, to prevent duplication.
+      sed -i "/$VAR/d"  ~/.bashrc
+      echo "export $VAR=$VALUE" >> ~/.bashrc;
+    fi
+  fi
+done
 
-RUN apt-get update && \
-    apt-get install -y --force-yes --no-install-recommends \
-        libmemcached-dev \
-        libmcrypt-dev \
-        libreadline-dev \
-        libgmp-dev \
-        libzip-dev \
-        libz-dev \
-        libpq-dev \
-        libjpeg-dev \
-        libpng-dev \
-        libfreetype6-dev \
-        libssl-dev \
-        openssh-server \
-        libmagickwand-dev \
-        git \
-        cron \
-        nano \
-        libxml2-dev \
-        nodejs \
-        npm 
+# Source the .bashrc file so that the exported variables are available.
+. ~/.bashrc
 
-# Install soap extention
-RUN docker-php-ext-install soap
+# If there is still no value for the REMOTE_HOST variable then we set it to the default of host.docker.internal. This
+# value will be sufficient for windows and mac environments.
+if [ -z "${REMOTE_HOST}" ]; then
+  REMOTE_HOST="host.docker.internal"
+  sed -i "/REMOTE_HOST/d"  ~/.bashrc
+  echo "export REMOTE_HOST=\"$REMOTE_HOST\"" >> ~/.bashrc;
+  . ~/.bashrc
+fi
 
-# Install for image manipulationdock
-RUN docker-php-ext-install exif
+# Start the cron service.
+service cron start
 
-# Install the PHP pcntl extention
-RUN docker-php-ext-install pcntl
+# Toggle xdebug
+if [ "true" == "$XDEBUG" ] && [ ! -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini ]; then
+  # Remove PHP_IDE_CONFIG from cron file so we do not duplicate it when adding below
+  sed -i '/PHP_IDE_CONFIG/d' /etc/cron.d/laravel-scheduler
+  if [ ! -z "${PHP_IDE_CONFIG}" ]; then
+    # Add PHP_IDE_CONFIG to cron file. Cron by default does not load enviromental variables. The server name, set here, is
+    # used by PHPSTORM for path mappings
+    echo -e "PHP_IDE_CONFIG=\"$PHP_IDE_CONFIG\"\n$(cat /etc/cron.d/laravel-scheduler)" > /etc/cron.d/laravel-scheduler
+  fi
+  # Enable xdebug estension and set up the docker-php-ext-xdebug.ini file with the required xdebug settings
+  docker-php-ext-enable xdebug && \
+  echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini; \
+  echo "xdebug.remote_autostart=1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini; \
+  echo "xdebug.remote_connect_back=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini; \
+  echo "xdebug.remote_host=$REMOTE_HOST" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini;
 
-# Install the PHP intl extention
-RUN docker-php-ext-install intl
+elif [ -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini ]; then
+  # Remove PHP_IDE_CONFIG from cron file if already added
+  sed -i '/PHP_IDE_CONFIG/d' /etc/cron.d/laravel-scheduler
+  # Remove Xdebug config file disabling xdebug
+  rm -rf /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+fi
 
-# Install the PHP gmp extention
-RUN docker-php-ext-install gmp
-
-# Install the PHP zip extention
-RUN docker-php-ext-install zip
-
-# Install the PHP pdo_mysql extention
-RUN docker-php-ext-install pdo_mysql
-
-# Install the PHP pdo_pgsql extention
-RUN docker-php-ext-install pdo_pgsql
-
-# Install the PHP bcmath extension
-RUN docker-php-ext-install bcmath
-
-#####################################
-# PHPRedis:
-#####################################
-RUN pecl install redis && docker-php-ext-enable redis
-RUN pecl install mongodb && docker-php-ext-enable mongodb
-#####################################
-# Imagick:
-#####################################
-
-RUN pecl install imagick && \
-    docker-php-ext-enable imagick
-
-#####################################
-# GD:
-#####################################
-
-# Install the PHP gd library
-RUN docker-php-ext-install gd && \
-#    docker-php-ext-configure gd \
-#        --with-jpeg-dir
-#        --with-freetype-dir=/usr/include/freetype2 && \
-     docker-php-ext-configure gd --with-freetype --with-jpeg && \
-     docker-php-ext-install gd
-#####################################
-# xDebug:
-#####################################
-
-# Install the xdebug extension
-RUN pecl install xdebug
-
-#####################################
-# PHP Memcached:
-#####################################
-
-# Install the php memcached extension
-RUN pecl install memcached && docker-php-ext-enable memcached
-
-#####################################
-# Composer:
-#####################################
-
-# Install composer and add its bin to the PATH.
-RUN curl -s http://getcomposer.org/installer | php && \
-    echo "export PATH=${PATH}:/var/www/vendor/bin" >> ~/.bashrc && \
-    mv composer.phar /usr/local/bin/composer
-# Source the bash
-RUN . ~/.bashrc
-
-#####################################
-# Laravel Schedule Cron Job:
-#####################################
-
-RUN echo "* * * * * root /usr/local/bin/php /var/www/artisan schedule:run >> /dev/null 2>&1"  >> /etc/cron.d/laravel-scheduler
-RUN chmod 0644 /etc/cron.d/laravel-scheduler
-
-#
-#--------------------------------------------------------------------------
-# Final Touch
-#--------------------------------------------------------------------------
-#
-
-ADD ./local.ini /usr/local/etc/php/conf.d
-
-#####################################
-# Aliases:
-#####################################
-# docker-compose exec php-fpm dep --> locally installed Deployer binaries
-RUN echo '#!/bin/bash\n/usr/local/bin/php /var/www/vendor/bin/dep "$@"' > /usr/bin/dep
-RUN chmod +x /usr/bin/dep
-# docker-compose exec php-fpm art --> php artisan
-RUN echo '#!/bin/bash\n/usr/local/bin/php /var/www/artisan "$@"' > /usr/bin/art
-RUN chmod +x /usr/bin/art
-# docker-compose exec php-fpm migrate --> php artisan migrate
-RUN echo '#!/bin/bash\n/usr/local/bin/php /var/www/artisan migrate "$@"' > /usr/bin/migrate
-RUN chmod +x /usr/bin/migrate
-# docker-compose exec php-fpm fresh --> php artisan migrate:fresh --seed
-RUN echo '#!/bin/bash\n/usr/local/bin/php /var/www/artisan migrate:fresh --seed' > /usr/bin/fresh
-RUN chmod +x /usr/bin/fresh
-# docker-compose exec php-fpm t --> run the tests for the project and generate testdox
-RUN echo '#!/bin/bash\n/usr/local/bin/php /var/www/artisan config:clear\n/var/www/vendor/bin/phpunit -d memory_limit=2G --stop-on-error --stop-on-failure --testdox-text=tests/report.txt "$@"' > /usr/bin/t
-RUN chmod +x /usr/bin/t
-# docker-compose exec php-fpm d --> run the Laravel Dusk browser tests for the project
-RUN echo '#!/bin/bash\n/usr/local/bin/php /var/www/artisan config:clear\n/bin/bash\n/usr/local/bin/php /var/www/artisan dusk -d memory_limit=2G --stop-on-error --stop-on-failure --testdox-text=tests/report-dusk.txt "$@"' > /usr/bin/d
-RUN chmod +x /usr/bin/d
-
-RUN rm -r /var/lib/apt/lists/*
-
-WORKDIR /var/www
-
-COPY ./docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-RUN ln -s /usr/local/bin/docker-entrypoint.sh /
-ENTRYPOINT ["docker-entrypoint.sh"]
-
-EXPOSE 9000
-CMD ["php-fpm"]
+exec "$@"
